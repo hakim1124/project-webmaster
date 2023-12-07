@@ -3,36 +3,33 @@
 namespace ProgramerHakim\Project\PHP\MVC\Controller;
 
 use ProgramerHakim\Project\PHP\MVC\App\View;
+use ProgramerHakim\Project\PHP\MVC\Config\Database;
+use ProgramerHakim\Project\PHP\MVC\Repository\SessionRepository;
+use ProgramerHakim\Project\PHP\MVC\Repository\UserRepository;
+use ProgramerHakim\Project\PHP\MVC\Service\SessionService;
 
 class HomeController
 {
-    function index(): void  //contoh model sederhana tanpa database
+    private SessionService $sessionService;
+    public function __construct()
     {
-        $model = [
-            "title" => "PHP MVC",
-            "conten" => "Programer Hakim"
-        ];
-        // echo "HomeController.index()";
-        // require __DIR__ . '/../View/Home/index.php';
-        View::render('Home/index', $model);
+        $connection = Database::getConnection();
+        $sessionRepository = new SessionRepository($connection);
+        $userRepository = new UserRepository($connection);
+        $this->sessionService = new SessionService($sessionRepository, $userRepository);
     }
-    function hello(): void
+    function index()
     {
-        echo "HomeController.hello()";
-    }
-    function world(): void
-    {
-        echo "HomeController.world()";
-    }
-    function login(): void  //contoh model sederhana tanpa database
-    {
-        $request = [
-            "username" => $_POST["username"],
-            "password" => $_POST["password"]
-        ];
-        $user = [];
-        $response = [
-            "message" => "login sukses"  //mengirimkan respon ke view
-        ];
+        $user = $this->sessionService->current();
+        if ($user == null) {
+            View::render('Home/index', [
+                'title' => 'Programer Hakim'
+            ]);
+        } else {
+            View::render('Home/dashboard', [
+                'title' => 'dashboard',
+                'user' => ['name' => $user->name]
+            ]);
+        }
     }
 }
